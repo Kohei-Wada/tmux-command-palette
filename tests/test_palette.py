@@ -63,6 +63,12 @@ class TestGetEntity:
     def test_target_client(self):
         assert get_entity("target-client") == "client"
 
+    def test_buffer_name(self):
+        assert get_entity("buffer-name") == "buffer"
+
+    def test_new_buffer_name(self):
+        assert get_entity("new-buffer-name") == "buffer"
+
 
 class TestParseRequiredArgs:
     def test_extracts_required_arg(self):

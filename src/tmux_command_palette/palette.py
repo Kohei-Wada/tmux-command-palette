@@ -65,8 +65,11 @@ def parse_targets(sig: str) -> list[tuple[str, str]]:
 def get_entity(type_name: str) -> str:
     """Extract entity from a type name.
 
-    E.g. 'target-pane' -> 'pane', 'src-pane' -> 'pane'.
+    E.g. 'target-pane' -> 'pane', 'src-pane' -> 'pane',
+    'buffer-name' -> 'buffer'.
     """
+    if "buffer" in type_name:
+        return "buffer"
     return type_name.rsplit("-", 1)[-1]
 
 
@@ -91,6 +94,11 @@ def list_entities(server: libtmux.Server, entity: str) -> list[str]:
             for w in s.windows
             for p in w.panes
         ]
+    elif entity == "buffer":
+        fmt = "#{buffer_name}"
+        result = server.cmd("list-buffers", "-F", fmt)
+        stdout = result.stdout or []
+        return [line for line in stdout if line]
     elif entity == "client":
         # libtmux doesn't have a direct client API; use server.cmd()
         fmt = "#{client_name}"
