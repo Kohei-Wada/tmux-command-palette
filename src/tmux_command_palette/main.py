@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 from pathlib import Path
 
@@ -39,11 +40,13 @@ class CommandPalette:
             self._execute_plugin(selected)
             return
 
-        args = self._select_targets(selected.name)
+        sig = get_signature(self._server, selected.name)
+
+        args = self._select_targets(selected.name, sig)
         if args is None:
             return
 
-        positional = self._prompt_positional_args(selected.name)
+        positional = self._prompt_positional_args(selected.name, sig)
         if positional is None:
             return
         args.extend(positional)
@@ -77,8 +80,7 @@ class CommandPalette:
         desc = get_description(cmd.name)
         return f"{sig}\n\n{desc}" if desc else sig
 
-    def _select_targets(self, cmd: str) -> list[str] | None:
-        sig = get_signature(self._server, cmd)
+    def _select_targets(self, cmd: str, sig: str) -> list[str] | None:
         targets = parse_targets(sig)
         args: list[str] = []
 
@@ -96,8 +98,7 @@ class CommandPalette:
 
         return args
 
-    def _prompt_positional_args(self, cmd: str) -> list[str] | None:
-        sig = get_signature(self._server, cmd)
+    def _prompt_positional_args(self, cmd: str, sig: str) -> list[str] | None:
         required = parse_required_args(sig, cmd)
         optional = parse_optional_args(sig)
 
@@ -141,7 +142,10 @@ class CommandPalette:
         if not run_sh.exists():
             return
 
-        env = {"TMUX_COMMAND_PALETTE_SOCKET": self._server.socket_path or ""}
+        env = {
+            **os.environ,
+            "TMUX_COMMAND_PALETTE_SOCKET": self._server.socket_path or "",
+        }
         result = subprocess.run(
             ["sh", str(run_sh)],
             capture_output=True,

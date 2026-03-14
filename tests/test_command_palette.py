@@ -78,50 +78,30 @@ class TestCommandPalette:
     def test_select_targets_no_targets(self):
         server = self._make_server()
         palette = CommandPalette(server)
-        with (
-            patch(
-                "tmux_command_palette.main.get_signature",
-                return_value="list-keys [-1aN]",
-            ),
-            patch("tmux_command_palette.main.parse_targets", return_value=[]),
-        ):
-            args = palette._select_targets("list-keys")
+        with patch("tmux_command_palette.main.parse_targets", return_value=[]):
+            args = palette._select_targets("list-keys", "list-keys [-1aN]")
         assert args == []
 
     def test_prompt_positional_required(self):
         server = self._make_server()
         palette = CommandPalette(server)
-        with (
-            patch(
-                "tmux_command_palette.main.get_signature",
-                return_value="send-keys key",
-            ),
-            patch("builtins.input", return_value="C-a"),
-        ):
-            result = palette._prompt_positional_args("send-keys")
+        with patch("builtins.input", return_value="C-a"):
+            result = palette._prompt_positional_args("send-keys", "send-keys key")
         assert result == ["C-a"]
 
     def test_prompt_positional_optional_empty(self):
         server = self._make_server()
         palette = CommandPalette(server)
-        with (
-            patch(
-                "tmux_command_palette.main.get_signature",
-                return_value="list-commands [command]",
-            ),
-            patch("builtins.input", return_value=""),
-        ):
-            result = palette._prompt_positional_args("list-commands")
+        with patch("builtins.input", return_value=""):
+            result = palette._prompt_positional_args(
+                "list-commands", "list-commands [command]"
+            )
         assert result == []
 
     def test_prompt_positional_none_when_no_args(self):
         server = self._make_server()
         palette = CommandPalette(server)
-        with patch(
-            "tmux_command_palette.main.get_signature",
-            return_value="list-keys [-1aN]",
-        ):
-            result = palette._prompt_positional_args("list-keys")
+        result = palette._prompt_positional_args("list-keys", "list-keys [-1aN]")
         assert result == []
 
     def test_execute_plugin(self, tmp_path):
