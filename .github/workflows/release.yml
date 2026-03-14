@@ -1,0 +1,69 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact: tmux-command-palette-linux-x86_64
+          - os: ubuntu-24.04-arm
+            artifact: tmux-command-palette-linux-aarch64
+          - os: macos-13
+            artifact: tmux-command-palette-darwin-x86_64
+          - os: macos-14
+            artifact: tmux-command-palette-darwin-arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Install dependencies
+        run: uv sync --group dev
+
+      - name: Build binary
+        run: |
+          uv run pyinstaller --onefile --name tmux-command-palette \
+            --add-data "src/tmux_command_palette/data/descriptions.json:tmux_command_palette/data" \
+            --collect-submodules prompt_toolkit \
+            --collect-submodules rich \
+            --collect-submodules pygments \
+            src/tmux_command_palette/main.py
+
+      - name: Rename artifact
+        run: mv dist/tmux-command-palette dist/${{ matrix.artifact }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: dist/${{ matrix.artifact }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
