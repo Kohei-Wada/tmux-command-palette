@@ -9,21 +9,27 @@ An interactive command palette for tmux. Fuzzy-search and execute any tmux comma
 - Interactive target selection (session / window / pane / client)
 - Plugin system for custom commands
 
-## Requirements
-
-- Python 3.13+
-- tmux
-- [uv](https://docs.astral.sh/uv/)
-
 ## Installation
+
+### TPM (recommended)
+
+Add the following to `~/.tmux.conf`:
+
+```tmux
+set -g @plugin 'Kohei-Wada/tmux-command-palette'
+```
+
+Then press `prefix + I` to install. A pre-built binary will be downloaded automatically — no Python or uv required.
+
+### Manual (from source)
+
+Requires Python 3.13+ and [uv](https://docs.astral.sh/uv/).
 
 ```sh
 uv tool install .
 ```
 
-## Setup
-
-Add the following to `~/.tmux.conf`:
+Then add to `~/.tmux.conf`:
 
 ```tmux
 run-shell /path/to/tmux-command-palette.tmux
